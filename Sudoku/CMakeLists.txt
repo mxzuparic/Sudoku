@@ -1,4 +1,4 @@
-﻿find_package(Qt6 REQUIRED COMPONENTS Widgets)
+﻿find_package(Qt6 REQUIRED COMPONENTS Widgets Test)
 
 qt_standard_project_setup()
 
@@ -22,4 +22,18 @@ target_link_libraries(Sudoku PRIVATE
 
 set_target_properties(Sudoku PROPERTIES
     WIN32_EXECUTABLE ON
+)
+
+add_executable(SudokuTests
+    "Tests/SudokuGameTests.cpp"
+)
+
+target_link_libraries(SudokuTests PRIVATE
+    Qt6::Test
+    SudokuLogic
+)
+
+add_test(
+    NAME SudokuGameTests
+    COMMAND SudokuTests
 )
