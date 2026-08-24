@@ -2,12 +2,23 @@
 
 qt_standard_project_setup()
 
-qt_add_executable(Sudoku
-    "Sudoku.cpp"
-    "Sudoku.h"
+add_library(SudokuLogic
+    "SudokuGame.cpp"
+    "SudokuGame.h"
 )
 
-target_link_libraries(Sudoku PRIVATE Qt6::Widgets)
+target_include_directories(SudokuLogic PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+qt_add_executable(Sudoku
+    "Sudoku.cpp"
+)
+
+target_link_libraries(Sudoku PRIVATE
+    Qt6::Widgets
+    SudokuLogic
+)
 
 set_target_properties(Sudoku PROPERTIES
     WIN32_EXECUTABLE ON
