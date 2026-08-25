@@ -17,6 +17,7 @@ public:
 
     bool isFixed(int row, int column) const;
     bool isValidMove(int row, int column, int value) const;
+    bool hasConflict(int row, int column) const;
     bool isSolved() const;
 
     bool setValue(int row, int column, int value);

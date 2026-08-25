@@ -15,6 +15,8 @@ target_include_directories(SudokuLogic PUBLIC
 
 qt_add_executable(Sudoku
     "Sudoku.cpp"
+    "MainWindow.cpp"
+    "MainWindow.h"
 )
 
 target_link_libraries(Sudoku PRIVATE
@@ -24,6 +26,12 @@ target_link_libraries(Sudoku PRIVATE
 
 set_target_properties(Sudoku PROPERTIES
     WIN32_EXECUTABLE ON
+)
+
+add_custom_command(TARGET Sudoku POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/data"
+        "$<TARGET_FILE_DIR:Sudoku>/data"
 )
 
 add_executable(SudokuTests

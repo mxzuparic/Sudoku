@@ -59,6 +59,28 @@ bool SudokuGame::isValidMove(
         value);
 }
 
+bool SudokuGame::hasConflict(
+    int row,
+    int column) const
+{
+    if (!puzzleLoaded ||
+        !isInsideBoard(row, column))
+    {
+        return false;
+    }
+
+    int value = currentBoard[row][column];
+
+    if (value == 0)
+        return false;
+
+    return !isValidPlacement(
+        currentBoard,
+        row,
+        column,
+        value);
+}
+
 bool SudokuGame::isSolved() const
 {
     return puzzleLoaded &&
@@ -79,7 +101,7 @@ bool SudokuGame::setValue(
     if (isFixed(row, column))
         return false;
 
-    if (!isValidMove(row, column, value))
+    if (value < 1 || value > 9)
         return false;
 
     currentBoard[row][column] = value;

@@ -34,6 +34,7 @@ private slots:
     void solvesLoadedPuzzle();
     void rejectsInvalidPuzzle();
     void loadsPuzzleFromFile();
+    void storesConflictingMove();
 };
 
 void SudokuGameTests::acceptsValidMove()
@@ -117,6 +118,17 @@ void SudokuGameTests::loadsPuzzleFromFile()
     QCOMPARE(game.valueAt(0, 0), 5);
     QCOMPARE(game.valueAt(0, 2), 0);
     QCOMPARE(game.solutionValueAt(0, 2), 4);
+}
+
+void SudokuGameTests::storesConflictingMove()
+{
+    SudokuGame game;
+    game.loadPuzzle(createPuzzle());
+
+    QVERIFY(game.setValue(0, 2, 5));
+
+    QCOMPARE(game.valueAt(0, 2), 5);
+    QVERIFY(game.hasConflict(0, 2));
 }
 
 QTEST_APPLESS_MAIN(SudokuGameTests)

@@ -1,13 +1,12 @@
-﻿#include <QApplication>
-#include <QWidget>
+﻿#include "MainWindow.h"
+
+#include <QApplication>
 
 int main(int argc, char* argv[])
 {
     QApplication application(argc, argv);
 
-    QWidget window;
-    window.setWindowTitle("Sudoku");
-    window.resize(500, 600);
+    MainWindow window;
     window.show();
 
     return application.exec();
