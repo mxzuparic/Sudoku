@@ -5,6 +5,8 @@ qt_standard_project_setup()
 add_library(SudokuLogic
     "SudokuGame.cpp"
     "SudokuGame.h"
+    "PuzzleLoader.cpp"
+    "PuzzleLoader.h"
 )
 
 target_include_directories(SudokuLogic PUBLIC
@@ -31,6 +33,10 @@ add_executable(SudokuTests
 target_link_libraries(SudokuTests PRIVATE
     Qt6::Test
     SudokuLogic
+)
+
+target_compile_definitions(SudokuTests PRIVATE
+    TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 
 add_test(

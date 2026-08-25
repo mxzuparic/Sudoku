@@ -1,6 +1,7 @@
 #include <QtTest>
 
 #include "SudokuGame.h"
+#include "PuzzleLoader.h"
 
 namespace
 {
@@ -32,6 +33,7 @@ private slots:
     void rejectsChangingFixedCell();
     void solvesLoadedPuzzle();
     void rejectsInvalidPuzzle();
+    void loadsPuzzleFromFile();
 };
 
 void SudokuGameTests::acceptsValidMove()
@@ -95,6 +97,26 @@ void SudokuGameTests::rejectsInvalidPuzzle()
     SudokuGame game;
 
     QVERIFY(!game.loadPuzzle(puzzle));
+}
+
+void SudokuGameTests::loadsPuzzleFromFile()
+{
+    std::string filePath =
+        std::string(TEST_DATA_DIR) + "/easy.txt";
+
+    std::vector<SudokuGame::Board> puzzles =
+        PuzzleLoader::loadFromFile(filePath);
+
+    QCOMPARE(static_cast<int>(puzzles.size()), 1);
+    QVERIFY(!puzzles.empty());
+
+    SudokuGame game;
+
+    QVERIFY(game.loadPuzzle(puzzles.front()));
+
+    QCOMPARE(game.valueAt(0, 0), 5);
+    QCOMPARE(game.valueAt(0, 2), 0);
+    QCOMPARE(game.solutionValueAt(0, 2), 4);
 }
 
 QTEST_APPLESS_MAIN(SudokuGameTests)
