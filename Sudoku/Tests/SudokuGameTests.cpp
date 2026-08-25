@@ -30,6 +30,8 @@ private slots:
     void rejectsDuplicateInColumn();
     void rejectsDuplicateInBox();
     void rejectsChangingFixedCell();
+    void solvesLoadedPuzzle();
+    void rejectsInvalidPuzzle();
 };
 
 void SudokuGameTests::acceptsValidMove()
@@ -72,6 +74,27 @@ void SudokuGameTests::rejectsChangingFixedCell()
 
     QVERIFY(!game.setValue(0, 0, 4));
     QCOMPARE(game.valueAt(0, 0), 5);
+}
+
+void SudokuGameTests::solvesLoadedPuzzle()
+{
+    SudokuGame game;
+
+    QVERIFY(game.loadPuzzle(createPuzzle()));
+
+    QCOMPARE(game.solutionValueAt(0, 2), 4);
+    QCOMPARE(game.solutionValueAt(8, 0), 3);
+}
+
+void SudokuGameTests::rejectsInvalidPuzzle()
+{
+    SudokuGame::Board puzzle = createPuzzle();
+
+    puzzle[0][2] = 5;
+
+    SudokuGame game;
+
+    QVERIFY(!game.loadPuzzle(puzzle));
 }
 
 QTEST_APPLESS_MAIN(SudokuGameTests)
