@@ -76,45 +76,23 @@ void MainWindow::createBoard()
 
 void MainWindow::refreshBoard()
 {
-    for (int row = 0;
-        row < SudokuGame::BoardSize;
-        row++)
+    for (int row = 0; row < SudokuGame::BoardSize; ++row)
     {
-        for (int column = 0;
-            column < SudokuGame::BoardSize;
-            column++)
+        for (int column = 0; column < SudokuGame::BoardSize; ++column)
         {
-            QPushButton* button =
-                cellButtons[row][column];
+            QPushButton* button = cellButtons[row][column];
 
             int value = game.valueAt(row, column);
+            button->setText(value == 0 ? "" : QString::number(value));
 
-            if (value == 0)
-                button->setText("");
-            else
-                button->setText(QString::number(value));
+            bool fixedCell = game.isFixed(row, column);
+            bool conflicting =
+                !fixedCell && game.hasConflict(row, column);
 
             QString style =
-                "font-size: 20px;"
-                "border: 1px solid #777777;";
-
-            if (game.isFixed(row, column))
-            {
-                style +=
-                    "font-weight: bold;"
-                    "background-color: #dddddd;"
-                    "color: #222222;";
-            }
-            else
-            {
-                style +=
-                    "background-color: white;"
-                    "color: #2563eb;";
-            }
-
-            bool conflicting =
-                !game.isFixed(row, column) &&
-                game.hasConflict(row, column);
+                "font-size: 26px;"
+                "font-weight: 600;"
+                "background-color: white;";
 
             if (conflicting)
             {
@@ -122,17 +100,37 @@ void MainWindow::refreshBoard()
                     "color: #d32f2f;"
                     "background-color: #ffe2e2;";
             }
-
-            bool selected =
-                row == selectedRow &&
-                column == selectedColumn;
-
-            if (selected)
+            else if (fixedCell)
             {
-                style +=
-                    "background-color: #cfe3ff;"
-                    "border: 2px solid #2563eb;";
+                style += "color: #1f2937;";
             }
+            else
+            {
+                style += "color: #2563eb;";
+            }
+
+            if (row == selectedRow &&
+                column == selectedColumn &&
+                !conflicting)
+            {
+                style += "background-color: #eaf3ff;";
+            }
+
+            int leftBorder = column == 0 ? 3 : 0;
+            int topBorder = row == 0 ? 3 : 0;
+            int rightBorder = column % 3 == 2 ? 3 : 1;
+            int bottomBorder = row % 3 == 2 ? 3 : 1;
+
+            style += QString(
+                "border-left: %1px solid #334155;"
+                "border-top: %2px solid #334155;"
+                "border-right: %3px solid #334155;"
+                "border-bottom: %4px solid #334155;"
+            )
+                .arg(leftBorder)
+                .arg(topBorder)
+                .arg(rightBorder)
+                .arg(bottomBorder);
 
             button->setStyleSheet(style);
         }
