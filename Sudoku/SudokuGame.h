@@ -11,6 +11,7 @@ public:
         std::array<std::array<int, BoardSize>, BoardSize>;
 
     bool loadPuzzle(const Board& puzzle);
+    bool applyHint(int row, int column);
 
     int valueAt(int row, int column) const;
     int solutionValueAt(int row, int column) const;

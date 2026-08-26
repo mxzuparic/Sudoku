@@ -40,6 +40,7 @@ private slots:
     void storesConflictingMove();
     void recognizesCompletedNumber();
     void loadsAllDifficultyFiles();
+    void appliesHint();
 };
 
 void SudokuGameTests::acceptsValidMove()
@@ -220,6 +221,52 @@ void SudokuGameTests::loadsAllDifficultyFiles()
             QVERIFY(game.loadPuzzle(puzzle));
         }
     }
+}
+
+void SudokuGameTests::appliesHint()
+{
+    SudokuGame game;
+    game.loadPuzzle(createPuzzle());
+
+    int hintRow = -1;
+    int hintColumn = -1;
+
+    for (int row = 0;
+        row < SudokuGame::BoardSize &&
+        hintRow == -1;
+        ++row)
+    {
+        for (int column = 0;
+            column < SudokuGame::BoardSize;
+            ++column)
+        {
+            if (!game.isFixed(row, column))
+            {
+                hintRow = row;
+                hintColumn = column;
+                break;
+            }
+        }
+    }
+
+    QVERIFY(hintRow >= 0);
+
+    int expectedValue =
+        game.solutionValueAt(
+            hintRow,
+            hintColumn);
+
+    QVERIFY(game.applyHint(
+        hintRow,
+        hintColumn));
+
+    QCOMPARE(
+        game.valueAt(hintRow, hintColumn),
+        expectedValue);
+
+    QVERIFY(!game.applyHint(
+        hintRow,
+        hintColumn));
 }
 
 QTEST_APPLESS_MAIN(SudokuGameTests)

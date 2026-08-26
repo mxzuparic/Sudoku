@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -127,6 +128,18 @@ void MainWindow::createBoard()
         "font-weight: 600;"
         "color: #334155;");
 
+    QPushButton* hintButton =
+        new QPushButton("Hint", controlsWidget);
+
+    hintButton->setFixedWidth(70);
+    hintButton->setFocusPolicy(Qt::NoFocus);
+
+    connect(
+        hintButton,
+        &QPushButton::clicked,
+        this,
+        &MainWindow::giveHint);
+
     QPushButton* newGameButton =
         new QPushButton("New Game", controlsWidget);
 
@@ -157,7 +170,9 @@ void MainWindow::createBoard()
     controlsLayout->addWidget(difficultyComboBox);
     controlsLayout->addStretch();
     controlsLayout->addWidget(timerLabel);
-    controlsLayout->addSpacing(12);
+    controlsLayout->addSpacing(8);
+    controlsLayout->addWidget(hintButton);
+    controlsLayout->addSpacing(8);
     controlsLayout->addWidget(newGameButton);
 
     mainLayout->addWidget(controlsWidget);
@@ -417,4 +432,87 @@ void MainWindow::updateTimerDisplay()
         QString("%1:%2")
         .arg(minutes, 2, 10, QChar('0'))
         .arg(seconds, 2, 10, QChar('0')));
+}
+
+void MainWindow::giveHint()
+{
+    int hintRow = -1;
+    int hintColumn = -1;
+
+    bool selectedCellNeedsHint =
+        selectedRow >= 0 &&
+        selectedColumn >= 0 &&
+        !game.isFixed(
+            selectedRow,
+            selectedColumn) &&
+        game.valueAt(
+            selectedRow,
+            selectedColumn) !=
+        game.solutionValueAt(
+            selectedRow,
+            selectedColumn);
+
+    if (selectedCellNeedsHint)
+    {
+        hintRow = selectedRow;
+        hintColumn = selectedColumn;
+    }
+    else
+    {
+        std::vector<std::pair<int, int>> candidates;
+
+        for (int row = 0;
+            row < SudokuGame::BoardSize;
+            ++row)
+        {
+            for (int column = 0;
+                column < SudokuGame::BoardSize;
+                ++column)
+            {
+                if (!game.isFixed(row, column) &&
+                    game.valueAt(row, column) !=
+                    game.solutionValueAt(row, column))
+                {
+                    candidates.emplace_back(
+                        row,
+                        column);
+                }
+            }
+        }
+
+        if (!candidates.empty())
+        {
+            int randomIndex =
+                QRandomGenerator::global()->bounded(
+                    static_cast<int>(
+                        candidates.size()));
+
+            hintRow =
+                candidates[randomIndex].first;
+
+            hintColumn =
+                candidates[randomIndex].second;
+        }
+    }
+
+    if (hintRow == -1)
+        return;
+
+    if (!game.applyHint(hintRow, hintColumn))
+        return;
+
+    selectedRow = hintRow;
+    selectedColumn = hintColumn;
+
+    refreshBoard();
+
+    if (game.isSolved())
+    {
+        gameTimer->stop();
+
+        QMessageBox::information(
+            this,
+            "Sudoku",
+            "Puzzle solved!");
+    }
 }

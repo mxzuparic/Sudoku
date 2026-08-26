@@ -48,4 +48,5 @@ private:
     void refreshNumberStatus();
     void resetTimer();
     void updateTimerDisplay();
+    void giveHint();
 };

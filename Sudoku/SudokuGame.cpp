@@ -18,6 +18,29 @@ bool SudokuGame::loadPuzzle(const Board& puzzle)
     return true;
 }
 
+bool SudokuGame::applyHint(
+    int row,
+    int column)
+{
+    if (!puzzleLoaded ||
+        !isInsideBoard(row, column) ||
+        isFixed(row, column))
+    {
+        return false;
+    }
+
+    int correctValue =
+        solutionValueAt(row, column);
+
+    if (valueAt(row, column) == correctValue)
+        return false;
+
+    return setValue(
+        row,
+        column,
+        correctValue);
+}
+
 int SudokuGame::valueAt(int row, int column) const
 {
     if (!isInsideBoard(row, column))
