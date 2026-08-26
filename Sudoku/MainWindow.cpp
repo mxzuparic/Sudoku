@@ -7,6 +7,7 @@
 #include <QKeyEvent>
 #include <QPushButton>
 #include <QWidget>
+#include <QMessageBox>
 
 #include <string>
 #include <vector>
@@ -162,13 +163,25 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     if (key >= Qt::Key_1 && key <= Qt::Key_9)
     {
         int value = key - Qt::Key_0;
+        bool wasSolved = game.isSolved();
 
-        game.setValue(
+        bool valueEntered = game.setValue(
             selectedRow,
             selectedColumn,
             value);
 
         refreshBoard();
+
+        if (valueEntered &&
+            !wasSolved &&
+            game.isSolved())
+        {
+            QMessageBox::information(
+                this,
+                "Sudoku",
+                "Puzzle solved!");
+        }
+
         return;
     }
 
