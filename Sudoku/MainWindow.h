@@ -10,6 +10,7 @@
 class QLabel;
 class QKeyEvent;
 class QPushButton;
+class QTimer;
 
 class MainWindow : public QMainWindow
 {
@@ -34,6 +35,10 @@ private:
     int selectedColumn = -1;
     int currentPuzzleIndex = -1;
     std::string currentDifficulty = "easy";
+    QTimer* gameTimer = nullptr;
+    QLabel* timerLabel = nullptr;
+
+    int elapsedSeconds = 0;
 
     void loadInitialPuzzle();
     void createBoard();
@@ -41,4 +46,6 @@ private:
     void selectCell(int row, int column);
     void startNewGame();
     void refreshNumberStatus();
+    void resetTimer();
+    void updateTimerDisplay();
 };

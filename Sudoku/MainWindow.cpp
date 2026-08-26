@@ -13,6 +13,8 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QComboBox>
+#include <QChar>
+#include <QTimer>
 
 #include <string>
 #include <vector>
@@ -25,6 +27,20 @@ MainWindow::MainWindow(QWidget* parent)
     loadInitialPuzzle();
     createBoard();
     refreshBoard();
+
+    gameTimer = new QTimer(this);
+
+    connect(
+        gameTimer,
+        &QTimer::timeout,
+        this,
+        [this]()
+        {
+            ++elapsedSeconds;
+            updateTimerDisplay();
+        });
+
+    resetTimer();
 }
 
 void MainWindow::loadInitialPuzzle()
@@ -68,6 +84,7 @@ void MainWindow::startNewGame()
     selectedColumn = -1;
 
     refreshBoard();
+    resetTimer();
 }
 
 void MainWindow::createBoard()
@@ -99,6 +116,17 @@ void MainWindow::createBoard()
     difficultyComboBox->setFixedWidth(110);
     difficultyComboBox->setFocusPolicy(Qt::NoFocus);
 
+    timerLabel =
+        new QLabel("00:00", controlsWidget);
+
+    timerLabel->setAlignment(Qt::AlignCenter);
+    timerLabel->setMinimumWidth(70);
+
+    timerLabel->setStyleSheet(
+        "font-size: 18px;"
+        "font-weight: 600;"
+        "color: #334155;");
+
     QPushButton* newGameButton =
         new QPushButton("New Game", controlsWidget);
 
@@ -128,6 +156,8 @@ void MainWindow::createBoard()
     controlsLayout->addWidget(difficultyLabel);
     controlsLayout->addWidget(difficultyComboBox);
     controlsLayout->addStretch();
+    controlsLayout->addWidget(timerLabel);
+    controlsLayout->addSpacing(12);
     controlsLayout->addWidget(newGameButton);
 
     mainLayout->addWidget(controlsWidget);
@@ -312,6 +342,8 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
             !wasSolved &&
             game.isSolved())
         {
+            gameTimer->stop();
+
             QMessageBox::information(
                 this,
                 "Sudoku",
@@ -367,4 +399,22 @@ void MainWindow::refreshNumberStatus()
 
         label->setStyleSheet(style);
     }
+}
+
+void MainWindow::resetTimer()
+{
+    elapsedSeconds = 0;
+    updateTimerDisplay();
+    gameTimer->start(1000);
+}
+
+void MainWindow::updateTimerDisplay()
+{
+    int minutes = elapsedSeconds / 60;
+    int seconds = elapsedSeconds % 60;
+
+    timerLabel->setText(
+        QString("%1:%2")
+        .arg(minutes, 2, 10, QChar('0'))
+        .arg(seconds, 2, 10, QChar('0')));
 }
