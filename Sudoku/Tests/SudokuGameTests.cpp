@@ -1,3 +1,6 @@
+#include <string>
+#include <vector>
+
 #include <QtTest>
 
 #include "SudokuGame.h"
@@ -36,6 +39,7 @@ private slots:
     void loadsPuzzleFromFile();
     void storesConflictingMove();
     void recognizesCompletedNumber();
+    void loadsAllDifficultyFiles();
 };
 
 void SudokuGameTests::acceptsValidMove()
@@ -109,7 +113,7 @@ void SudokuGameTests::loadsPuzzleFromFile()
     std::vector<SudokuGame::Board> puzzles =
         PuzzleLoader::loadFromFile(filePath);
 
-    QCOMPARE(static_cast<int>(puzzles.size()), 1);
+    QCOMPARE(static_cast<int>(puzzles.size()), 2);
     QVERIFY(!puzzles.empty());
 
     SudokuGame game;
@@ -185,6 +189,37 @@ void SudokuGameTests::recognizesCompletedNumber()
     }
 
     QVERIFY(game.isNumberComplete(targetValue));
+}
+
+void SudokuGameTests::loadsAllDifficultyFiles()
+{
+    const std::vector<std::string> fileNames =
+    {
+        "easy.txt",
+        "medium.txt",
+        "hard.txt"
+    };
+
+    for (const std::string& fileName : fileNames)
+    {
+        std::string filePath =
+            std::string(TEST_DATA_DIR)
+            + "/"
+            + fileName;
+
+        std::vector<SudokuGame::Board> puzzles =
+            PuzzleLoader::loadFromFile(filePath);
+
+        QCOMPARE(
+            puzzles.size(),
+            static_cast<std::size_t>(2));
+
+        for (const SudokuGame::Board& puzzle : puzzles)
+        {
+            SudokuGame game;
+            QVERIFY(game.loadPuzzle(puzzle));
+        }
+    }
 }
 
 QTEST_APPLESS_MAIN(SudokuGameTests)

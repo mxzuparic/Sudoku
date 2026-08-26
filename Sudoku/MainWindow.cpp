@@ -12,6 +12,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QComboBox>
 
 #include <string>
 #include <vector>
@@ -29,19 +30,33 @@ MainWindow::MainWindow(QWidget* parent)
 void MainWindow::loadInitialPuzzle()
 {
     std::string filePath =
-        (QCoreApplication::applicationDirPath() +
-            "/data/easy.txt").toStdString();
+        QCoreApplication::applicationDirPath().toStdString()
+        + "/data/"
+        + currentDifficulty
+        + ".txt";
 
     std::vector<SudokuGame::Board> puzzles =
         PuzzleLoader::loadFromFile(filePath);
 
     if (!puzzles.empty())
     {
-        int randomIndex =
-            QRandomGenerator::global()->bounded(
-                static_cast<int>(puzzles.size()));
+        int newPuzzleIndex = 0;
 
-        game.loadPuzzle(puzzles[randomIndex]);
+        if (puzzles.size() > 1)
+        {
+            do
+            {
+                newPuzzleIndex =
+                    QRandomGenerator::global()->bounded(
+                        static_cast<int>(puzzles.size()));
+            } while (newPuzzleIndex ==
+                currentPuzzleIndex);
+        }
+
+        currentPuzzleIndex = newPuzzleIndex;
+
+        game.loadPuzzle(
+            puzzles[currentPuzzleIndex]);
     }
 }
 
@@ -64,8 +79,28 @@ void MainWindow::createBoard()
     mainLayout->setContentsMargins(20, 20, 20, 20);
     mainLayout->setSpacing(12);
 
+    QWidget* controlsWidget =
+        new QWidget(centralWidget);
+
+    QHBoxLayout* controlsLayout =
+        new QHBoxLayout(controlsWidget);
+
+    controlsLayout->setContentsMargins(0, 0, 0, 0);
+
+    QLabel* difficultyLabel =
+        new QLabel("Difficulty:", controlsWidget);
+
+    QComboBox* difficultyComboBox =
+        new QComboBox(controlsWidget);
+
+    difficultyComboBox->addItems(
+        { "Easy", "Medium", "Hard" });
+
+    difficultyComboBox->setFixedWidth(110);
+    difficultyComboBox->setFocusPolicy(Qt::NoFocus);
+
     QPushButton* newGameButton =
-        new QPushButton("New Game", centralWidget);
+        new QPushButton("New Game", controlsWidget);
 
     newGameButton->setFixedWidth(120);
     newGameButton->setFocusPolicy(Qt::NoFocus);
@@ -76,10 +111,26 @@ void MainWindow::createBoard()
         this,
         &MainWindow::startNewGame);
 
-    mainLayout->addWidget(
-        newGameButton,
-        0,
-        Qt::AlignRight);
+    connect(
+        difficultyComboBox,
+        &QComboBox::currentTextChanged,
+        this,
+        [this](const QString& difficulty)
+        {
+            currentDifficulty =
+                difficulty.toLower().toStdString();
+
+            currentPuzzleIndex = -1;
+
+            startNewGame();
+        });
+
+    controlsLayout->addWidget(difficultyLabel);
+    controlsLayout->addWidget(difficultyComboBox);
+    controlsLayout->addStretch();
+    controlsLayout->addWidget(newGameButton);
+
+    mainLayout->addWidget(controlsWidget);
 
     QWidget* boardWidget =
         new QWidget(centralWidget);

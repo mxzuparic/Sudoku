@@ -5,6 +5,7 @@
 #include <QMainWindow>
 
 #include <array>
+#include <string>
 
 class QLabel;
 class QKeyEvent;
@@ -31,6 +32,8 @@ private:
 
     int selectedRow = -1;
     int selectedColumn = -1;
+    int currentPuzzleIndex = -1;
+    std::string currentDifficulty = "easy";
 
     void loadInitialPuzzle();
     void createBoard();
