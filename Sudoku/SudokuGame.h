@@ -19,6 +19,7 @@ public:
     bool isValidMove(int row, int column, int value) const;
     bool hasConflict(int row, int column) const;
     bool isSolved() const;
+    bool isNumberComplete(int value) const;
 
     bool setValue(int row, int column, int value);
     bool clearValue(int row, int column);

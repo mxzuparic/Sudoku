@@ -6,6 +6,7 @@
 
 #include <array>
 
+class QLabel;
 class QKeyEvent;
 class QPushButton;
 
@@ -24,6 +25,10 @@ private:
         std::array<QPushButton*, SudokuGame::BoardSize>,
         SudokuGame::BoardSize> cellButtons{};
 
+    std::array<
+        QLabel*,
+        SudokuGame::BoardSize> numberStatusLabels{};
+
     int selectedRow = -1;
     int selectedColumn = -1;
 
@@ -31,4 +36,6 @@ private:
     void createBoard();
     void refreshBoard();
     void selectCell(int row, int column);
+    void startNewGame();
+    void refreshNumberStatus();
 };

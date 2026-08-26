@@ -35,6 +35,7 @@ private slots:
     void rejectsInvalidPuzzle();
     void loadsPuzzleFromFile();
     void storesConflictingMove();
+    void recognizesCompletedNumber();
 };
 
 void SudokuGameTests::acceptsValidMove()
@@ -129,6 +130,61 @@ void SudokuGameTests::storesConflictingMove()
 
     QCOMPARE(game.valueAt(0, 2), 5);
     QVERIFY(game.hasConflict(0, 2));
+}
+
+void SudokuGameTests::recognizesCompletedNumber()
+{
+    SudokuGame game;
+    game.loadPuzzle(createPuzzle());
+
+    int targetValue = 0;
+
+    for (int row = 0;
+        row < SudokuGame::BoardSize &&
+        targetValue == 0;
+        ++row)
+    {
+        for (int column = 0;
+            column < SudokuGame::BoardSize;
+            ++column)
+        {
+            if (!game.isFixed(row, column))
+            {
+                targetValue =
+                    game.solutionValueAt(
+                        row,
+                        column);
+
+                break;
+            }
+        }
+    }
+
+    QVERIFY(targetValue >= 1);
+    QVERIFY(!game.isNumberComplete(targetValue));
+
+    for (int row = 0;
+        row < SudokuGame::BoardSize;
+        ++row)
+    {
+        for (int column = 0;
+            column < SudokuGame::BoardSize;
+            ++column)
+        {
+            if (!game.isFixed(row, column) &&
+                game.solutionValueAt(
+                    row,
+                    column) == targetValue)
+            {
+                QVERIFY(game.setValue(
+                    row,
+                    column,
+                    targetValue));
+            }
+        }
+    }
+
+    QVERIFY(game.isNumberComplete(targetValue));
 }
 
 QTEST_APPLESS_MAIN(SudokuGameTests)

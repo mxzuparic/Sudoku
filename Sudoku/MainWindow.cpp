@@ -8,6 +8,10 @@
 #include <QPushButton>
 #include <QWidget>
 #include <QMessageBox>
+#include <QRandomGenerator>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
 
 #include <string>
 #include <vector>
@@ -32,27 +36,70 @@ void MainWindow::loadInitialPuzzle()
         PuzzleLoader::loadFromFile(filePath);
 
     if (!puzzles.empty())
-        game.loadPuzzle(puzzles.front());
+    {
+        int randomIndex =
+            QRandomGenerator::global()->bounded(
+                static_cast<int>(puzzles.size()));
+
+        game.loadPuzzle(puzzles[randomIndex]);
+    }
+}
+
+void MainWindow::startNewGame()
+{
+    loadInitialPuzzle();
+
+    selectedRow = -1;
+    selectedColumn = -1;
+
+    refreshBoard();
 }
 
 void MainWindow::createBoard()
 {
     QWidget* centralWidget = new QWidget(this);
-    QGridLayout* layout = new QGridLayout(centralWidget);
+    QVBoxLayout* mainLayout =
+        new QVBoxLayout(centralWidget);
 
-    layout->setSpacing(0);
-    layout->setContentsMargins(20, 20, 20, 20);
+    mainLayout->setContentsMargins(20, 20, 20, 20);
+    mainLayout->setSpacing(12);
+
+    QPushButton* newGameButton =
+        new QPushButton("New Game", centralWidget);
+
+    newGameButton->setFixedWidth(120);
+    newGameButton->setFocusPolicy(Qt::NoFocus);
+
+    connect(
+        newGameButton,
+        &QPushButton::clicked,
+        this,
+        &MainWindow::startNewGame);
+
+    mainLayout->addWidget(
+        newGameButton,
+        0,
+        Qt::AlignRight);
+
+    QWidget* boardWidget =
+        new QWidget(centralWidget);
+
+    QGridLayout* boardLayout =
+        new QGridLayout(boardWidget);
+
+    boardLayout->setSpacing(0);
+    boardLayout->setContentsMargins(0, 0, 0, 0);
 
     for (int row = 0;
         row < SudokuGame::BoardSize;
-        row++)
+        ++row)
     {
         for (int column = 0;
             column < SudokuGame::BoardSize;
-            column++)
+            ++column)
         {
             QPushButton* button =
-                new QPushButton(centralWidget);
+                new QPushButton(boardWidget);
 
             button->setFixedSize(55, 55);
             button->setFocusPolicy(Qt::NoFocus);
@@ -66,10 +113,47 @@ void MainWindow::createBoard()
                     selectCell(row, column);
                 });
 
-            layout->addWidget(button, row, column);
+            boardLayout->addWidget(
+                button,
+                row,
+                column);
+
             cellButtons[row][column] = button;
         }
     }
+
+    mainLayout->addWidget(boardWidget);
+
+    QWidget* numberStatusWidget =
+        new QWidget(centralWidget);
+
+    QHBoxLayout* numberStatusLayout =
+        new QHBoxLayout(numberStatusWidget);
+
+    numberStatusLayout->setContentsMargins(0, 0, 0, 0);
+    numberStatusLayout->setSpacing(6);
+
+    numberStatusLayout->addStretch();
+
+    for (int value = 1;
+        value <= SudokuGame::BoardSize;
+        ++value)
+    {
+        QLabel* label =
+            new QLabel(
+                QString::number(value),
+                numberStatusWidget);
+
+        label->setAlignment(Qt::AlignCenter);
+        label->setFixedSize(45, 38);
+
+        numberStatusLayout->addWidget(label);
+        numberStatusLabels[value - 1] = label;
+    }
+
+    numberStatusLayout->addStretch();
+
+    mainLayout->addWidget(numberStatusWidget);
 
     setCentralWidget(centralWidget);
     adjustSize();
@@ -136,6 +220,7 @@ void MainWindow::refreshBoard()
             button->setStyleSheet(style);
         }
     }
+    refreshNumberStatus();
 }
 
 void MainWindow::selectCell(int row, int column)
@@ -198,4 +283,37 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
     }
 
     QMainWindow::keyPressEvent(event);
+}
+
+void MainWindow::refreshNumberStatus()
+{
+    for (int value = 1;
+        value <= SudokuGame::BoardSize;
+        ++value)
+    {
+        QLabel* label =
+            numberStatusLabels[value - 1];
+
+        QString style =
+            "font-size: 20px;"
+            "font-weight: 600;"
+            "border-radius: 6px;";
+
+        if (game.isNumberComplete(value))
+        {
+            style +=
+                "color: #15803d;"
+                "background-color: #dcfce7;"
+                "border: 1px solid #86efac;";
+        }
+        else
+        {
+            style +=
+                "color: #475569;"
+                "background-color: #f8fafc;"
+                "border: 1px solid #cbd5e1;";
+        }
+
+        label->setStyleSheet(style);
+    }
 }

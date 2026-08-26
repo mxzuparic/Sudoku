@@ -87,6 +87,38 @@ bool SudokuGame::isSolved() const
         currentBoard == solutionBoard;
 }
 
+bool SudokuGame::isNumberComplete(int value) const
+{
+    if (!puzzleLoaded ||
+        value < 1 ||
+        value > 9)
+    {
+        return false;
+    }
+
+    for (int row = 0; row < BoardSize; ++row)
+    {
+        for (int column = 0;
+            column < BoardSize;
+            ++column)
+        {
+            bool currentlyContainsValue =
+                valueAt(row, column) == value;
+
+            bool shouldContainValue =
+                solutionValueAt(row, column) == value;
+
+            if (currentlyContainsValue !=
+                shouldContainValue)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 bool SudokuGame::setValue(
     int row,
     int column,
