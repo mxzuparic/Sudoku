@@ -8,6 +8,10 @@ Open the repository folder in Visual Studio and set CMAKE_PREFIX_PATH to your Qt
 
 Select the **x64 Debug** configuration, choose **Build All** and run Sudoku.exe.
 
+## Running the tests
+
+After building, open **Test** > **Test Explorer** in Visual Studio and select **Run All Tests**.
+
 ## Controls
 
 Click an empty cell and use the number keys from 1 to 9 to enter a value.
