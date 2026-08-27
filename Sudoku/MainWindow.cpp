@@ -43,6 +43,12 @@ MainWindow::MainWindow(QWidget* parent)
         {
             ++elapsedSeconds;
             updateTimerDisplay();
+
+            if (hintCooldownSeconds > 0)
+            {
+                --hintCooldownSeconds;
+                updateHintButton();
+            }
         });
 
     resetTimer();
@@ -132,10 +138,10 @@ void MainWindow::createBoard()
         "font-weight: 600;"
         "color: #334155;");
 
-    QPushButton* hintButton =
+    hintButton =
         new QPushButton("Hint", controlsWidget);
 
-    hintButton->setFixedWidth(70);
+    hintButton->setFixedWidth(80);
     hintButton->setFocusPolicy(Qt::NoFocus);
 
     connect(
@@ -402,6 +408,8 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
         {
             gameTimer->stop();
 
+            updateHintButton();
+
             QMessageBox::information(
                 this,
                 "Sudoku",
@@ -462,7 +470,11 @@ void MainWindow::refreshNumberStatus()
 void MainWindow::resetTimer()
 {
     elapsedSeconds = 0;
+    hintCooldownSeconds = 0;
+
     updateTimerDisplay();
+    updateHintButton();
+
     gameTimer->start(1000);
 }
 
@@ -548,6 +560,7 @@ void MainWindow::giveHint()
     selectedColumn = hintColumn;
 
     refreshBoard();
+    startHintCooldown();
 
     if (game.isSolved())
     {
@@ -765,9 +778,11 @@ void MainWindow::loadGame()
     selectedRow = -1;
     selectedColumn = -1;
     elapsedSeconds = savedElapsedSeconds;
+    hintCooldownSeconds = 0;
 
     refreshBoard();
     updateTimerDisplay();
+    updateHintButton();
 
     if (game.isSolved())
         gameTimer->stop();
@@ -778,4 +793,34 @@ void MainWindow::loadGame()
         this,
         "Sudoku",
         "Game loaded.");
+}
+
+void MainWindow::startHintCooldown()
+{
+    hintCooldownSeconds = 10;
+    updateHintButton();
+}
+
+void MainWindow::updateHintButton()
+{
+    if (game.isSolved())
+    {
+        hintButton->setEnabled(false);
+        hintButton->setText("Hint");
+        return;
+    }
+
+    if (hintCooldownSeconds > 0)
+    {
+        hintButton->setEnabled(false);
+
+        hintButton->setText(
+            QString("Hint (%1)")
+            .arg(hintCooldownSeconds));
+    }
+    else
+    {
+        hintButton->setEnabled(true);
+        hintButton->setText("Hint");
+    }
 }

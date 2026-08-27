@@ -39,7 +39,9 @@ private:
     QTimer* gameTimer = nullptr;
     QLabel* timerLabel = nullptr;
     QComboBox* difficultyComboBox = nullptr;
+    QPushButton* hintButton = nullptr;
 
+    int hintCooldownSeconds = 0;
     int elapsedSeconds = 0;
 
     void loadInitialPuzzle();
@@ -54,4 +56,6 @@ private:
     void saveGame();
     void loadGame();
     std::string saveFilePath() const;
+    void startHintCooldown();
+    void updateHintButton();
 };
