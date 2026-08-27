@@ -25,6 +25,10 @@ public:
     bool setValue(int row, int column, int value);
     bool clearValue(int row, int column);
 
+    Board initialPuzzle() const;
+    Board currentState() const;
+    bool restoreState(const Board& state);
+
     void reset();
 
 private:

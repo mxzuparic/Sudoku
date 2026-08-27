@@ -178,6 +178,92 @@ bool SudokuGame::clearValue(int row, int column)
     return true;
 }
 
+SudokuGame::Board SudokuGame::initialPuzzle() const
+{
+    Board puzzle{};
+
+    if (!puzzleLoaded)
+        return puzzle;
+
+    for (int row = 0; row < BoardSize; ++row)
+    {
+        for (int column = 0;
+            column < BoardSize;
+            ++column)
+        {
+            if (isFixed(row, column))
+            {
+                puzzle[row][column] =
+                    valueAt(row, column);
+            }
+        }
+    }
+
+    return puzzle;
+}
+
+SudokuGame::Board SudokuGame::currentState() const
+{
+    Board state{};
+
+    if (!puzzleLoaded)
+        return state;
+
+    for (int row = 0; row < BoardSize; ++row)
+    {
+        for (int column = 0;
+            column < BoardSize;
+            ++column)
+        {
+            state[row][column] =
+                valueAt(row, column);
+        }
+    }
+
+    return state;
+}
+
+bool SudokuGame::restoreState(const Board& state)
+{
+    if (!puzzleLoaded)
+        return false;
+
+    for (int row = 0; row < BoardSize; ++row)
+    {
+        for (int column = 0;
+            column < BoardSize;
+            ++column)
+        {
+            int value = state[row][column];
+
+            if (value < 0 || value > 9)
+                return false;
+
+            if (isFixed(row, column) &&
+                value != valueAt(row, column))
+            {
+                return false;
+            }
+        }
+    }
+
+    for (int row = 0; row < BoardSize; ++row)
+    {
+        for (int column = 0;
+            column < BoardSize;
+            ++column)
+        {
+            if (!isFixed(row, column))
+            {
+                currentBoard[row][column] =
+                    state[row][column];
+            }
+        }
+    }
+
+    return true;
+}
+
 void SudokuGame::reset()
 {
     if (puzzleLoaded)

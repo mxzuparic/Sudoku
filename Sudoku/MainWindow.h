@@ -11,6 +11,7 @@ class QLabel;
 class QKeyEvent;
 class QPushButton;
 class QTimer;
+class QComboBox;
 
 class MainWindow : public QMainWindow
 {
@@ -37,6 +38,7 @@ private:
     std::string currentDifficulty = "easy";
     QTimer* gameTimer = nullptr;
     QLabel* timerLabel = nullptr;
+    QComboBox* difficultyComboBox = nullptr;
 
     int elapsedSeconds = 0;
 
@@ -49,4 +51,7 @@ private:
     void resetTimer();
     void updateTimerDisplay();
     void giveHint();
+    void saveGame();
+    void loadGame();
+    std::string saveFilePath() const;
 };

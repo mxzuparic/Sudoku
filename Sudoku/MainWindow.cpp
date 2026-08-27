@@ -15,7 +15,11 @@
 #include <QComboBox>
 #include <QChar>
 #include <QTimer>
+#include <QDir>
+#include <QSignalBlocker>
+#include <QStandardPaths>
 
+#include <fstream>
 #include <string>
 #include <vector>
 #include <utility>
@@ -108,7 +112,7 @@ void MainWindow::createBoard()
     QLabel* difficultyLabel =
         new QLabel("Difficulty:", controlsWidget);
 
-    QComboBox* difficultyComboBox =
+    difficultyComboBox =
         new QComboBox(controlsWidget);
 
     difficultyComboBox->addItems(
@@ -176,6 +180,45 @@ void MainWindow::createBoard()
     controlsLayout->addWidget(newGameButton);
 
     mainLayout->addWidget(controlsWidget);
+
+    QWidget* saveControlsWidget =
+        new QWidget(centralWidget);
+
+    QHBoxLayout* saveControlsLayout =
+        new QHBoxLayout(saveControlsWidget);
+
+    saveControlsLayout->setContentsMargins(0, 0, 0, 0);
+    saveControlsLayout->setSpacing(8);
+
+    QPushButton* saveButton =
+        new QPushButton("Save Game", saveControlsWidget);
+
+    QPushButton* loadButton =
+        new QPushButton("Load Game", saveControlsWidget);
+
+    saveButton->setFixedWidth(100);
+    loadButton->setFixedWidth(100);
+
+    saveButton->setFocusPolicy(Qt::NoFocus);
+    loadButton->setFocusPolicy(Qt::NoFocus);
+
+    connect(
+        saveButton,
+        &QPushButton::clicked,
+        this,
+        &MainWindow::saveGame);
+
+    connect(
+        loadButton,
+        &QPushButton::clicked,
+        this,
+        &MainWindow::loadGame);
+
+    saveControlsLayout->addStretch();
+    saveControlsLayout->addWidget(saveButton);
+    saveControlsLayout->addWidget(loadButton);
+
+    mainLayout->addWidget(saveControlsWidget);
 
     QWidget* boardWidget =
         new QWidget(centralWidget);
@@ -515,4 +558,224 @@ void MainWindow::giveHint()
             "Sudoku",
             "Puzzle solved!");
     }
+}
+
+std::string MainWindow::saveFilePath() const
+{
+    QString directoryPath =
+        QStandardPaths::writableLocation(
+            QStandardPaths::AppDataLocation);
+
+    QDir().mkpath(directoryPath);
+
+    return (directoryPath + "/savegame.txt")
+        .toStdString();
+}
+
+void MainWindow::saveGame()
+{
+    std::ofstream file(saveFilePath());
+
+    if (!file.is_open())
+    {
+        QMessageBox::warning(
+            this,
+            "Sudoku",
+            "The game could not be saved.");
+
+        return;
+    }
+
+    SudokuGame::Board puzzle =
+        game.initialPuzzle();
+
+    SudokuGame::Board state =
+        game.currentState();
+
+    file << "SUDOKU_SAVE_V1\n";
+    file << currentDifficulty << '\n';
+    file << elapsedSeconds << '\n';
+
+    auto writeBoard =
+        [&file](const SudokuGame::Board& board)
+        {
+            for (int row = 0;
+                row < SudokuGame::BoardSize;
+                ++row)
+            {
+                for (int column = 0;
+                    column < SudokuGame::BoardSize;
+                    ++column)
+                {
+                    file << board[row][column]
+                        << ' ';
+                }
+
+                file << '\n';
+            }
+        };
+
+    writeBoard(puzzle);
+    writeBoard(state);
+
+    if (!file.good())
+    {
+        QMessageBox::warning(
+            this,
+            "Sudoku",
+            "The game could not be saved.");
+
+        return;
+    }
+
+    QMessageBox::information(
+        this,
+        "Sudoku",
+        "Game saved.");
+}
+
+void MainWindow::loadGame()
+{
+    std::ifstream file(saveFilePath());
+
+    if (!file.is_open())
+    {
+        QMessageBox::information(
+            this,
+            "Sudoku",
+            "No saved game was found.");
+
+        return;
+    }
+
+    std::string version;
+    std::string savedDifficulty;
+    int savedElapsedSeconds = 0;
+
+    if (!(file >> version
+        >> savedDifficulty
+        >> savedElapsedSeconds) ||
+        version != "SUDOKU_SAVE_V1" ||
+        savedElapsedSeconds < 0 ||
+        (savedDifficulty != "easy" &&
+            savedDifficulty != "medium" &&
+            savedDifficulty != "hard"))
+    {
+        QMessageBox::warning(
+            this,
+            "Sudoku",
+            "The saved game is invalid.");
+
+        return;
+    }
+
+    SudokuGame::Board puzzle{};
+    SudokuGame::Board state{};
+
+    auto readBoard =
+        [&file](SudokuGame::Board& board)
+        {
+            for (int row = 0;
+                row < SudokuGame::BoardSize;
+                ++row)
+            {
+                for (int column = 0;
+                    column < SudokuGame::BoardSize;
+                    ++column)
+                {
+                    int value = 0;
+
+                    if (!(file >> value) ||
+                        value < 0 ||
+                        value > 9)
+                    {
+                        return false;
+                    }
+
+                    board[row][column] = value;
+                }
+            }
+
+            return true;
+        };
+
+    if (!readBoard(puzzle) ||
+        !readBoard(state))
+    {
+        QMessageBox::warning(
+            this,
+            "Sudoku",
+            "The saved game is invalid.");
+
+        return;
+    }
+
+    for (int row = 0;
+        row < SudokuGame::BoardSize;
+        ++row)
+    {
+        for (int column = 0;
+            column < SudokuGame::BoardSize;
+            ++column)
+        {
+            if (puzzle[row][column] != 0 &&
+                state[row][column] !=
+                puzzle[row][column])
+            {
+                QMessageBox::warning(
+                    this,
+                    "Sudoku",
+                    "The saved game is invalid.");
+
+                return;
+            }
+        }
+    }
+
+    SudokuGame loadedGame;
+
+    if (!loadedGame.loadPuzzle(puzzle) ||
+        !loadedGame.restoreState(state))
+    {
+        QMessageBox::warning(
+            this,
+            "Sudoku",
+            "The saved game is invalid.");
+
+        return;
+    }
+
+    game = loadedGame;
+
+    currentDifficulty = savedDifficulty;
+    currentPuzzleIndex = -1;
+
+    {
+        QSignalBlocker blocker(
+            difficultyComboBox);
+
+        if (currentDifficulty == "easy")
+            difficultyComboBox->setCurrentText("Easy");
+        else if (currentDifficulty == "medium")
+            difficultyComboBox->setCurrentText("Medium");
+        else
+            difficultyComboBox->setCurrentText("Hard");
+    }
+
+    selectedRow = -1;
+    selectedColumn = -1;
+    elapsedSeconds = savedElapsedSeconds;
+
+    refreshBoard();
+    updateTimerDisplay();
+
+    if (game.isSolved())
+        gameTimer->stop();
+    else
+        gameTimer->start(1000);
+
+    QMessageBox::information(
+        this,
+        "Sudoku",
+        "Game loaded.");
 }

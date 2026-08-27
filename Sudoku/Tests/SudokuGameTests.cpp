@@ -41,6 +41,7 @@ private slots:
     void recognizesCompletedNumber();
     void loadsAllDifficultyFiles();
     void appliesHint();
+    void restoresSavedState();
 };
 
 void SudokuGameTests::acceptsValidMove()
@@ -267,6 +268,48 @@ void SudokuGameTests::appliesHint()
     QVERIFY(!game.applyHint(
         hintRow,
         hintColumn));
+}
+
+void SudokuGameTests::restoresSavedState()
+{
+    SudokuGame game;
+    game.loadPuzzle(createPuzzle());
+
+    QVERIFY(game.setValue(0, 2, 5));
+    QVERIFY(game.setValue(0, 3, 6));
+
+    SudokuGame::Board puzzle =
+        game.initialPuzzle();
+
+    SudokuGame::Board savedState =
+        game.currentState();
+
+    SudokuGame restoredGame;
+
+    QVERIFY(restoredGame.loadPuzzle(puzzle));
+    QVERIFY(restoredGame.restoreState(savedState));
+
+    for (int row = 0;
+        row < SudokuGame::BoardSize;
+        ++row)
+    {
+        for (int column = 0;
+            column < SudokuGame::BoardSize;
+            ++column)
+        {
+            QCOMPARE(
+                restoredGame.valueAt(row, column),
+                savedState[row][column]);
+        }
+    }
+
+    SudokuGame::Board invalidState =
+        savedState;
+
+    invalidState[0][0] = 1;
+
+    QVERIFY(!restoredGame.restoreState(
+        invalidState));
 }
 
 QTEST_APPLESS_MAIN(SudokuGameTests)
