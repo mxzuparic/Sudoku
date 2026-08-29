@@ -93,6 +93,7 @@ void MainWindow::startNewGame()
 
     selectedRow = -1;
     selectedColumn = -1;
+    highlightedNumber = 0;
 
     refreshBoard();
     resetTimer();
@@ -284,16 +285,26 @@ void MainWindow::createBoard()
         value <= SudokuGame::BoardSize;
         ++value)
     {
-        QLabel* label =
-            new QLabel(
+        QPushButton* numberButton =
+            new QPushButton(
                 QString::number(value),
                 numberStatusWidget);
 
-        label->setAlignment(Qt::AlignCenter);
-        label->setFixedSize(45, 38);
+        numberButton->setFixedSize(45, 38);
+        numberButton->setFocusPolicy(Qt::NoFocus);
 
-        numberStatusLayout->addWidget(label);
-        numberStatusLabels[value - 1] = label;
+        connect(
+            numberButton,
+            &QPushButton::clicked,
+            this,
+            [this, value]()
+            {
+                selectNumber(value);
+            });
+
+        numberStatusLayout->addWidget(numberButton);
+        numberStatusButtons[value - 1] =
+            numberButton;
     }
 
     numberStatusLayout->addStretch();
@@ -317,7 +328,36 @@ void MainWindow::refreshBoard()
 
             bool fixedCell = game.isFixed(row, column);
             bool conflicting =
-                !fixedCell && game.hasConflict(row, column);
+                game.hasConflict(row, column);
+
+            bool hasSelectedCell =
+                selectedRow >= 0 &&
+                selectedColumn >= 0;
+
+            bool selectedCell =
+                row == selectedRow &&
+                column == selectedColumn;
+
+            bool relatedToSelection =
+                hasSelectedCell &&
+                (row == selectedRow ||
+                    column == selectedColumn ||
+                    (row / 3 == selectedRow / 3 &&
+                        column / 3 == selectedColumn / 3));
+
+            int selectedValue = highlightedNumber;
+
+            if (hasSelectedCell)
+            {
+                selectedValue =
+                    game.valueAt(
+                        selectedRow,
+                        selectedColumn);
+            }
+
+            bool sameValue =
+                selectedValue != 0 &&
+                value == selectedValue;
 
             QString style =
                 "font-size: 26px;"
@@ -327,8 +367,12 @@ void MainWindow::refreshBoard()
             if (conflicting)
             {
                 style +=
-                    "color: #d32f2f;"
                     "background-color: #ffe2e2;";
+
+                if (fixedCell)
+                    style += "color: #1f2937;";
+                else
+                    style += "color: #d32f2f;";
             }
             else if (fixedCell)
             {
@@ -339,11 +383,25 @@ void MainWindow::refreshBoard()
                 style += "color: #2563eb;";
             }
 
-            if (row == selectedRow &&
-                column == selectedColumn &&
+            if (relatedToSelection &&
                 !conflicting)
             {
-                style += "background-color: #eaf3ff;";
+                style +=
+                    "background-color: #f1f5f9;";
+            }
+
+            if (sameValue &&
+                !conflicting)
+            {
+                style +=
+                    "background-color: #dbeafe;";
+            }
+
+            if (selectedCell &&
+                !conflicting)
+            {
+                style +=
+                    "background-color: #bfdbfe;";
             }
 
             int leftBorder = column == 0 ? 3 : 0;
@@ -368,16 +426,38 @@ void MainWindow::refreshBoard()
     refreshNumberStatus();
 }
 
-void MainWindow::selectCell(int row, int column)
+void MainWindow::selectCell(
+    int row,
+    int column)
 {
+    highlightedNumber = 0;
+
     selectedRow = row;
     selectedColumn = column;
 
     refreshBoard();
 }
 
+void MainWindow::selectNumber(int value)
+{
+    selectedRow = -1;
+    selectedColumn = -1;
+
+    if (highlightedNumber == value)
+        highlightedNumber = 0;
+    else
+        highlightedNumber = value;
+
+    refreshBoard();
+}
+
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
+    if (game.isSolved())
+    {
+        QMainWindow::keyPressEvent(event);
+        return;
+    }
     bool hasSelection =
         selectedRow >= 0 &&
         selectedColumn >= 0;
@@ -436,19 +516,36 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 
 void MainWindow::refreshNumberStatus()
 {
+    int activeValue = highlightedNumber;
+
+    if (selectedRow >= 0 &&
+        selectedColumn >= 0)
+    {
+        activeValue =
+            game.valueAt(
+                selectedRow,
+                selectedColumn);
+    }
+
     for (int value = 1;
         value <= SudokuGame::BoardSize;
         ++value)
     {
-        QLabel* label =
-            numberStatusLabels[value - 1];
+        QPushButton* button =
+            numberStatusButtons[value - 1];
+
+        bool complete =
+            game.isNumberComplete(value);
+
+        bool active =
+            activeValue == value;
 
         QString style =
             "font-size: 20px;"
             "font-weight: 600;"
             "border-radius: 6px;";
 
-        if (game.isNumberComplete(value))
+        if (complete)
         {
             style +=
                 "color: #15803d;"
@@ -463,7 +560,20 @@ void MainWindow::refreshNumberStatus()
                 "border: 1px solid #cbd5e1;";
         }
 
-        label->setStyleSheet(style);
+        if (active)
+        {
+            style +=
+                "border: 2px solid #2563eb;";
+
+            if (!complete)
+            {
+                style +=
+                    "color: #1d4ed8;"
+                    "background-color: #dbeafe;";
+            }
+        }
+
+        button->setStyleSheet(style);
     }
 }
 
@@ -558,6 +668,7 @@ void MainWindow::giveHint()
 
     selectedRow = hintRow;
     selectedColumn = hintColumn;
+    highlightedNumber = 0;
 
     refreshBoard();
     startHintCooldown();
@@ -777,6 +888,7 @@ void MainWindow::loadGame()
 
     selectedRow = -1;
     selectedColumn = -1;
+    highlightedNumber = 0;
     elapsedSeconds = savedElapsedSeconds;
     hintCooldownSeconds = 0;
 

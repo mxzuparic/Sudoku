@@ -29,8 +29,8 @@ private:
         SudokuGame::BoardSize> cellButtons{};
 
     std::array<
-        QLabel*,
-        SudokuGame::BoardSize> numberStatusLabels{};
+        QPushButton*,
+        SudokuGame::BoardSize> numberStatusButtons{};
 
     int selectedRow = -1;
     int selectedColumn = -1;
@@ -43,6 +43,7 @@ private:
 
     int hintCooldownSeconds = 0;
     int elapsedSeconds = 0;
+    int highlightedNumber = 0;
 
     void loadInitialPuzzle();
     void createBoard();
@@ -58,4 +59,5 @@ private:
     std::string saveFilePath() const;
     void startHintCooldown();
     void updateHintButton();
+    void selectNumber(int value);
 };
