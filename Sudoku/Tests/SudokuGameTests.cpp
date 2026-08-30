@@ -115,7 +115,7 @@ void SudokuGameTests::loadsPuzzleFromFile()
     std::vector<SudokuGame::Board> puzzles =
         PuzzleLoader::loadFromFile(filePath);
 
-    QCOMPARE(static_cast<int>(puzzles.size()), 2);
+    QCOMPARE(static_cast<int>(puzzles.size()), 5);
     QVERIFY(!puzzles.empty());
 
     SudokuGame game;
@@ -214,7 +214,7 @@ void SudokuGameTests::loadsAllDifficultyFiles()
 
         QCOMPARE(
             puzzles.size(),
-            static_cast<std::size_t>(2));
+            static_cast<std::size_t>(5));
 
         for (const SudokuGame::Board& puzzle : puzzles)
         {
